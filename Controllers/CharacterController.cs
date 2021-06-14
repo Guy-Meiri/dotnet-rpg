@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using dotnet_rpg.Models;
 using System.Collections.Generic;
 using System.Linq;
+using dotnet_rpg.Services.CharacterService;
+using System.Threading.Tasks;
+using dotnet_rpg.Dtos.Character;
 
 namespace dotnet_rpg.Controllers
 {
@@ -9,22 +12,44 @@ namespace dotnet_rpg.Controllers
     [Route("[controller]")]
     public class CharacterController : ControllerBase
     {
-        private static List<Character> characters = new List<Character>(){
-            new Character(),
-            new Character{Id = 1, Name= "Sam", HitPoints=40},
-            new Character{Id = 2, Name= "Mosh", HitPoints=50}
-        };
+        private readonly ICharacterService _characterService;
+        public CharacterController(ICharacterService characterService)
+        {
+            _characterService = characterService;
+
+        }
 
         [HttpGet("GetAll")]
-        public IActionResult Get()
+        public async Task<IActionResult> Get()
         {
-            return Ok(characters);
+            return Ok(await _characterService.GetAllCharacters());
         }
 
         [HttpGet("{id}")]
-        public IActionResult GetSingle(int id)
+        public async Task<IActionResult> GetSingle(int id)
         {
-            return Ok(characters.FirstOrDefault(c => c.Id == id));
+            return Ok(await _characterService.GetCharacterById(id));
         }
+
+        [HttpPost]
+        public async Task<IActionResult> AddCharacter(AddCharacterDto newCharacter)
+        {
+
+            return Ok(await _characterService.AddCharacter(newCharacter));
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> UpdateCharacter(UpdateCharacterDto updateCharacterDto)
+        {
+            ServiceResponse<UpdateCharacterDto> serviceResponse = await _characterService.UpdateCaracter(updateCharacterDto);
+            if (serviceResponse.Data == null)
+            {
+                return NotFound(serviceResponse);
+            }
+
+
+            return Ok(serviceResponse);
+        }
+
     }
 }
